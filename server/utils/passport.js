@@ -37,7 +37,8 @@ passport.use(
       secretOrKey: process.env.JWT_SECRET,
     },
     (jwtPayload, done) => {
-      return done(null, jwtPayload.user);
+      //console.log(jwtPayload);
+      return done(null, jwtPayload);
     }
   )
 );
