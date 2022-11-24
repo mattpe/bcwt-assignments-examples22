@@ -4,6 +4,11 @@ const {validationResult} = require('express-validator');
 
 const getCats = async (req, res) => {
   const cats = await catModel.getAllCats(res);
+  cats.map(cat => {
+    // convert birthdate date object to 'YYYY-MM-DD' string format
+    cat.birthdate = cat.birthdate.toISOString().split('T')[0];
+    return cat;
+  });
   res.json(cats);
 };
 
@@ -11,6 +16,8 @@ const getCat = async (req, res) => {
   // choose only one object with matching id
   const cat = await catModel.getCatById(res, req.params.catId);
   if (cat) {
+    // convert date object to 'YYYY-MM-DD' format
+    cat.birthdate = cat.birthdate.toISOString().split('T')[0];
     res.json(cat);
   } else {
     res.sendStatus(404);
@@ -25,7 +32,7 @@ const createCat = async (req, res) => {
   }
   else if (errors.isEmpty()) {
     const cat = req.body;
-    cat.owner = req.user.user_id;;
+    cat.owner = req.user.user_id;
     cat.filename = req.file.filename;
     console.log('creating a new cat:', cat);
     const catId = await catModel.addCat(cat, res);
@@ -39,15 +46,17 @@ const createCat = async (req, res) => {
 
 const modifyCat = async (req, res) => {
   const cat = req.body;
+  const user = req.user;
   if (req.params.catId) {
     cat.id = req.params.catId;
   }
-  const result = await catModel.updateCatById(cat, res);
-  if (result.affectedRows > 0) {
-    res.json({message: 'cat modified: ' + cat.id});
-  } else {
-    res.status(404).json({message: 'nothing changed'});
-  }
+  //console.log('user', user, 'modifies cat:', cat);
+  const result = await catModel.updateCatById(cat, user, res);
+    if (result.affectedRows > 0) {
+      res.json({message: 'cat modified: ' + cat.id});
+    } else {
+      res.status(400).json({message: 'nothing modified'});
+    }
 };
 
 const deleteCat = async (req, res) => {
