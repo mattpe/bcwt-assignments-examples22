@@ -1,6 +1,7 @@
 'use strict';
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
+const bcrypt = require('bcryptjs');
 const {validationResult} = require('express-validator');
 const {addUser} = require('../models/userModel');
 require('dotenv').config();
@@ -19,6 +20,8 @@ const login = (req, res) => {
         res.send(err);
       }
       // generate a signed json web token with the contents of user object and return it in the response
+      // do not include password in token/user object when sending to client
+      delete user.password;
       const token = jwt.sign(user, process.env.JWT_SECRET);
       return res.json({user, token});
     });
@@ -35,6 +38,11 @@ const register = async (req, res) => {
   const errors = validationResult(req);
   console.log('validation errors', errors);
   if (errors.isEmpty()) {
+    // Hash the input password and replace the clear text passwd with the hashed one
+    // before adding to the db
+    const salt = await bcrypt.genSalt();
+    const paswordHash = await bcrypt.hash(newUser.passwd, salt);
+    newUser.passwd = paswordHash;
     const result = await addUser(newUser, res);
     res.status(201).json({ message: 'user created', userId: result });
   } else {
