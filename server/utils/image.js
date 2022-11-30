@@ -13,10 +13,13 @@ const getCoordinates = (imgFile) => {
         if (error) {
           console.log('Error: ' + error.message);
         } else {
-          //console.log(exifData); // Do something with your data!
-          const decimalLon = gpsToDecimal(exifData.gps.GPSLongitude, exifData.gps.GPSLongitudeRef);
-          const decimalLat = gpsToDecimal(exifData.gps.GPSLatitude, exifData.gps.GPSLatitudeRef);
-          coordinates = [decimalLon, decimalLat];
+          // console.log(exifData); // Do something with your data!
+          // read/convert coordinates only if they exist in the meta data
+          if (exifData.gps.GPSLongitude) {
+            const decimalLon = gpsToDecimal(exifData.gps.GPSLongitude, exifData.gps.GPSLongitudeRef);
+            const decimalLat = gpsToDecimal(exifData.gps.GPSLatitude, exifData.gps.GPSLatitudeRef);
+            coordinates = [decimalLon, decimalLat];
+          }
         }
         resolve(coordinates);
       });
